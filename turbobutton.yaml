@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: aks-turbobutton
+  namespace: aks-turbobutton
+  labels:
+    k8s-app: aks-turbobutton
+spec:
+  selector:
+    matchLabels:
+      name: aks-turbobutton
+  template:
+    metadata:
+      labels:
+        name: aks-turbobutton
+    spec:
+      hostPID: true # For entering the host mont namespace via init
+      containers:
+      - name: aks-turbobutton
+        image: alexeldeib/bpftrace-bin-xenial-llvm-8
+        command: ["/bin/sleep", "3600"]
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 10m
+            memory: 50Mi
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: turbobutton
+          mountPath: /scripts
+      volumes:
+      - name: turbobutton
+        configMap:
+          name: aks-turbobutton
+          defaultMode: 0744

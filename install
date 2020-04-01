@@ -6,4 +6,7 @@ if ! kubectl get ns $ns; then
     sleep 5
   done
 fi
-helm install tb -f values.yaml stable/prometheus-operator --namespace aks-turbobutton
+
+kubectl create configmap aks-turbobutton --from-file=fix-node.sh -o yaml --dry-run | kubectl replace -f -
+kubectl apply -f turbobutton.yaml
+#helm install tb -f values.yaml stable/prometheus-operator --namespace aks-turbobutton
