@@ -1,0 +1,159 @@
+# Define persistent storage for Prometheus (PVC)
+
+# Helm overrides file for the kube-prometheus/prometheus-operator. Removes and
+# changes the configuration to omit unsupported metrics endpoints within AKS as
+# well as removing other components
+
+# If you want to use the dashboards shown within this project/the operator
+# within your own prometheus/grafana setup you will need to replicate the
+# prometheus scrape_configs to match those of `kube-prometheus` - the grafana
+# dashboards use globally defined/scoped variables/labels only created if you
+# match the relabel configurations within:
+#
+# If you want to pull in the raw dashboard JSON, see:
+#   https://github.com/helm/charts/blob/master/stable/prometheus-operator/hack/sync_grafana_dashboards.py
+# That script syncs the grafana charts from the main operator project and sets
+# a lot of the variables (defined as helm templates).
+#
+# I do not recommend trying to re-build this stack with a base prometheus and
+# grafana configuration. There are hidden variables/assumptions in the key charts
+# shown that require changes to align to grafana best practices.
+
+# alertmanager metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L83
+alertmanager:
+  enabled: false
+
+# grafana configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L403
+grafana:
+  defaultDashboardsEnabled: true
+  adminPassword: turbobutton
+  persistence:
+    type: pvc
+    enabled: true
+    storageClassName: managed-premium
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+
+# kube API server metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L517
+kubeApiServer:
+  enabled: true
+  tlsConfig:
+    serverName: kubernetes
+    insecureSkipVerify: false
+  ## If your API endpoint address is not reachable (as in AKS) you can replace it with the kubernetes service
+  relabelings:
+  - sourceLabels:
+      - __meta_kubernetes_namespace
+      - __meta_kubernetes_service_name
+      - __meta_kubernetes_endpoint_port_name
+    action: keep
+    regex: default;kubernetes;https
+  - targetLabel: __address__
+    replacement: kubernetes.default.svc:443
+
+# kubelet metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L555
+kubelet:
+  enabled: true
+  namespace: kube-system
+
+  serviceMonitor:
+    ## Scrape interval. If not set, the Prometheus default scrape interval is used.
+    ##
+    interval: ""
+    jobLabel: component
+    selector:
+      matchLabels:
+        component: apiserver
+        provider: kubernetes
+
+    ## 	metric relabel configs to apply to samples before ingestion.
+    ##
+    metricRelabelings: []
+    # - action: keep
+    #   regex: 'kube_(daemonset|deployment|pod|namespace|node|statefulset).+'
+    #   sourceLabels: [__name__]
+
+# kube-controller metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L623
+kubeControllerManager:
+  enabled: false
+
+# CoreDNS metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L676
+coreDns:
+  enabled: true
+  service:
+    port: 9153
+    targetPort: 9153
+    # selector:
+    #   k8s-app: kube-dns
+
+# kube-dns metrics configuration (should no longer be in production)
+kubeDns:
+  enabled: false
+
+# etcd metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L756
+kubeEtcd:
+  enabled: false
+
+# scheduler metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L816
+kubeScheduler:
+  enabled: false
+
+# kube-proxy metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L867
+kubeProxy:
+  enabled: false
+
+# kubeStateMetrics metrics configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L912
+kubeStateMetrics:
+  enabled: true
+
+# node exporter configuration: DO NOT REMOVE. Node exporter provides the best
+# view (outside of eBPF) to see critical host-level metrics. Not having it is
+# a large reason of why some of these tuning issues have escalated to systemic
+# cluster issues.
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L946
+nodeExporter:
+  enabled: true
+
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L994
+prometheusOperator:
+    prometheusOperator:
+    admissionWebhooks:
+      enabled: false
+      patch:
+        enabled: false
+    tlsProxy:
+      enabled: false
+
+# Prometheus configuration
+# https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L1220
+prometheus:
+  # Disable the admission webhook - AKS is enabling this by default (TBD)
+  admissionWebhooks:
+    enabled: False
+
+  # tbd? Add bpf-exporter
+  # https://github.com/helm/charts/blob/master/stable/prometheus-operator/values.yaml#L1680
+  additionalScrapeConfigs: []
+  additionalServiceMonitors: []
+  additionalPodMonitors: []
+
+  storageSpec:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: managed-premium
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 50Gi
+      selector: {}

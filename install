@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+ns=aks-turbobutton
+if ! kubectl get ns $ns; then
+  kubectl create ns $ns
+  while ! kubectl get ns $ns > /dev/null ;do
+    sleep 5
+  done
+fi
+helm install tb -f values.yaml stable/prometheus-operator --namespace aks-turbobutton
