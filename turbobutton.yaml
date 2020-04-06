@@ -18,7 +18,11 @@ spec:
       containers:
       - name: aks-turbobutton
         image: alexeldeib/bpftrace-bin-xenial-llvm-8
+        #command: ["/scripts/fix-node.sh", "3600"]
         command: ["/bin/sleep", "3600"]
+        envFrom:
+          - configMapRef:
+            name: turbobutton-tunables
         resources:
           limits:
             memory: 100Mi
@@ -30,8 +34,23 @@ spec:
         volumeMounts:
         - name: turbobutton
           mountPath: /scripts
+        - name: etcmnt
+          mountPath: /etcmnt
+        - name: usrmnt
+          mountPath: /usrmnt
+        - name: cloudmnt
+          mountPath: /cloudmnt
       volumes:
       - name: turbobutton
         configMap:
           name: aks-turbobutton
           defaultMode: 0744
+      - name: etcmnt
+        hostPath:
+          path: /etc
+      - name: usrmnt
+        hostPath:
+          path: /usr/local
+      - name: cloudmnt
+        hostPath:
+          path: /var/lib/cloud
