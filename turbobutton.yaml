@@ -1,3 +1,16 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: turbobutton-able-tunas
+  namespace: aks-turbobutton
+data:
+  TB_TUNEDEVS: "1" # If true then we will drop in the tuned rc.local file
+  TB_REHOMEIO: "1" # If true the docker/ and kubelet/ directories are moved to tmpfs
+  TB_SCHEDULER: "noop"
+  TB_READ_AHEAD_KB: "4096"
+  TB_MAX_SECTORS_KB: "128"
+  TB_QUEUE_DEPTH: "64" # Need to validate Azure guidance re: qdepth
+---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -21,8 +34,8 @@ spec:
         #command: ["/scripts/fix-node.sh", "3600"]
         command: ["/bin/sleep", "3600"]
         envFrom:
-          - configMapRef:
-            name: turbobutton-tunables
+        - configMapRef:
+            name: turbobutton-able-tunas
         resources:
           limits:
             memory: 100Mi
@@ -38,8 +51,12 @@ spec:
           mountPath: /etcmnt
         - name: usrmnt
           mountPath: /usrmnt
+        - name: usrlocalmnt
+          mountPath: /usrlocalmnt
         - name: cloudmnt
           mountPath: /cloudmnt
+        - name: pythonmnt
+          mountPath: /pythonmnt
       volumes:
       - name: turbobutton
         configMap:
@@ -48,9 +65,15 @@ spec:
       - name: etcmnt
         hostPath:
           path: /etc
-      - name: usrmnt
+      - name: usrmnt # im tired ok
+        hostPath:
+          path: /usr
+      - name: usrlocalmnt
         hostPath:
           path: /usr/local
       - name: cloudmnt
         hostPath:
           path: /var/lib/cloud
+      - name: pythonmnt
+        hostPath:
+          path: /usr/lib/python2.7

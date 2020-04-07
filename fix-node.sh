@@ -30,24 +30,39 @@ BIOLATENCY="https://raw.githubusercontent.com/cloudflare/ebpf_exporter/master/ex
 NPD="https://github.com/kubernetes/node-problem-detector/releases/download/v0.8.1/node-problem-detector-v0.8.1.tar.gz"
 
 USRMNT="/usrmnt"
+PYTHONMNT="/pythonmnt"
 ETCMNT="/etcmnt"
+USRLOCALMNT="/usrlocalmnt"
 CLOUDMNT="/cloudmnt"
 
-if [ ! -e "${USRMNT}/bpftrace" ]; then
+
+# Install options
+INST_BPFTRACE=${TB_INST_BPFTRACE:=1}
+INST_EBPF_EXPORTER=${EBPF_EXPORTER:=1}
+INST_FLAMEGRAPH=${FLAMEGRAPH:=1}
+
+
+
+if [ "${INST_BPFTRACE}" -eq 1 ]; then
+    apt update && apt install python libelf-dev -y
     # inject pre-compiled bcc tools into the host (xenial only, yolo)
-    rsync -r /usr/local/bin/bpftrace ${USRMNT}/bin/bpftrace
-    rsync -r /usr/local/share/bpftrace ${USRMNT}/share/bpftrace
-    rsync -r /usr/local/share/bcc ${USRMNT}/share/bcc
-    rsync -r /usr/local/lib/libbcc* ${USRMNT}/lib/
-    rsync -r /usr/local/lib/python2.7/dist-packages/bcc ${USRMNT}/lib/python2.7/dist-packages/bcc
-    chmod +x ${USRMNT}/share/bpftrace/tools/*.bt
+    rm -rf ${USRLOCALMNT}/share/bpftrace && cp -r /usr/local/share/bpftrace ${USRLOCALMNT}/share/
+    rm -rf ${USRLOCALMNT}/share/bcc && cp -r /usr/local/share/bcc ${USRLOCALMNT}/share/
+    rm -rf ${USRLOCALMNT}/usr/lib/libbcc* && cp -r /usr/lib/libbcc* ${USRMNT}/lib/
+    rm -rf ${PYTHONMNT}/dist-packages/bcc && cp -r /usr/lib/python2.7/dist-packages/bcc ${PYTHONMNT}/dist-packages/
+    chmod +x ${USRLOCALMNT}/share/bpftrace/tools/*.bt
+
+cat <<EOF >${ETCMNT}/profile.d/bpftrace.sh
+    PATH=\$PATH:/usr/local/share/bpftrace/tools:/usr/local/share/bcc/tools/
+EOF
+
 fi
 
 if [ ! -e "${USRMNT}/local/bin" ]; then
     echo "node problem detector "
 fi
 
-if [ ! -e "${ETCMNT}/systemd/system/ebpf_exporter.service" ]; then
+if [ "${INST_EBPF_EXPORTER}" -eq 1 ]; then
     apt-get install -y wget
 
     # add in the bpf exporter -> sends IO latency metrics to prom
@@ -67,13 +82,15 @@ if [ ! -e "${ETCMNT}/systemd/system/ebpf_exporter.service" ]; then
 fi
 
 # Install Brendan Gregg's flamegraph tools
-if $TB_FLAMES; then
-    apt install -y git
-    ( cd ${USRMNT}/
-        rm -rf ${USRMNT}/flamegraph ${USRMNT}/heatmap
-        git clone https://github.com/brendangregg/FlameGraph ${USRMNT}/flamegraph && chmod +x flamegraph/*.pl
-        git clone https://github.com/brendangregg/HeatMap ${USRMNT}/heatmap && chmod +x heatmap/*.pl
-    )
+if [ ${INST_FLAMEGRAPH} -eq 1 ]; then
+    rm -rf ${USRMNT}/flamegraph ${USRMNT}/heatmap
+    mv /flamegraph ${USRMNT}/flamegraph && chmod +x ${USRMNT}/flamegraph/*.pl
+    mv /heatmap ${USRMNT}/heatmap && chmod +x ${USRMNT}/heatmap/*.pl
+
+cat <<EOF >${ETCMNT}/profile.d/flamegraph.sh
+    PATH=\$PATH:/heatmap:/flamegraph
+EOF
+
 fi
 
 # Inject a custom rc.local generated from the values above. Variables are
@@ -117,3 +134,15 @@ exit 0
 EOF
 
 fi
+
+
+
+
+cat <<EOF >${ETCMNT}/profile.d/turbobutton.sh
+    echo "==========================================="
+    echo "  aks-turbobutton applied"
+    echo "  missing linux tunings: /etc/rc.local
+    echo "  bpf tools: /usr/local/share/bcc/tools/"
+    echo "             https://iovisor.github.io/bcc/"
+    echo "==========================================="
+EOF
