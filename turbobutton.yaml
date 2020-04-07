@@ -31,8 +31,8 @@ spec:
       containers:
       - name: aks-turbobutton
         image: alexeldeib/bpftrace-bin-xenial-llvm-8
-        #command: ["/scripts/fix-node.sh", "3600"]
-        command: ["/bin/sleep", "3600"]
+        command: ["/scripts/fix-node.sh", "3600"]
+        #command: ["/bin/sleep", "3600"]
         envFrom:
         - configMapRef:
             name: turbobutton-able-tunas
