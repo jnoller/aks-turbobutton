@@ -123,7 +123,7 @@ do
     echo "${scheduler}" > \${device}/queue/scheduler
     echo "${read_ahead_kb}" > \${device}/queue/read_ahead_kb
     echo "${max_sectors_kb}" > \${device}/queue/max_sectors_kb
-    echo "${queue_depth}" > \${device}/queue/queue_depth
+    # echo "${queue_depth}" > \${device}/queue/nr_queue -> need to check kernel rev
 
 
     cat \${device}
@@ -141,7 +141,7 @@ fi
 cat <<EOF >${ETCMNT}/profile.d/turbobutton.sh
     echo "==========================================="
     echo "  aks-turbobutton applied"
-    echo "  missing linux tunings: /etc/rc.local
+    echo "  missing linux tunings: /etc/rc.local"
     echo "  bpf tools: /usr/local/share/bcc/tools/"
     echo "             https://iovisor.github.io/bcc/"
     echo "==========================================="
