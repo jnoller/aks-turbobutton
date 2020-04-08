@@ -15,12 +15,27 @@
 #
 # TBD: 7. Uses the azure.json configuration to shut off caching on all disks
 
+# Additional parameters to test:
+#
+# nf_conntrack_hashsize=131072
+# kernel.pid_max=131072
+# net.netfilter.nf_conntrack_max=1048576
+# small / sparse db disk read ahead: 4096 /dev/sdb
+# logging disk read ahead Disk (need to test with docker tempfs) 256 /dev/sd*
+# vm.min_free_kbytes = 1048576 - raises kernel reserved for higher buffer counts
+# kernel.numa_balancing = 0 vs 1 (depends on the kernel version)
+# /queue/rq_affinity 2 (nr_requests 256, readahead 256)
+#
+
+
+
 TB_TUNEDEVS=${TB_TUNEDEVS:=1} # If true then we will drop in the tuned rc.local file
 TB_REHOMEIO=${TB_REHOMEIO:=1} # If true the docker/ and kubelet/ directories are moved to tmpfs
 scheduler=${TB_SCHEDULER:="noop"}
 read_ahead_kb=${TB_READ_AHEAD_KB:="4096"}
 max_sectors_kb=${TB_MAX_SECTORS_KB:="128"}
-queue_depth=${TB_MAX_SECTORS_KB:="64"} # Need to validate Azure guidance re: qdepth
+queue_depth=${TB_MAX_SECTORS_KB:="64"} # Need to validate Azure guidance re: qdepth also kernel ver
+transparent_hugepage=${TRANSPARENT_HUGEPAGE:="always"}
 
 
 TMPD='/tmp/turbobutton-tmp'
@@ -98,6 +113,8 @@ fi
 # expanded automatically by the `cat <<EOF` if they are ${} style - $\{} should
 # pass through into the script, but that would be silly.
 if [ $TB_TUNEDEVS -eq 1 ]; then
+    rm -f ${ETCMNT}/rc.local.backup && cp ${ETCMNT}/rc.local ${ETCMNT}/rc.local.backup
+    echo "" >${ETCMNT}/rc.local
 
 cat <<EOF >${ETCMNT}/rc.local
 #!/bin/sh -e
@@ -118,21 +135,21 @@ if [ -e "/systemd/system/ebpf_exporter.service" ]; then
     systemctl is-active --quiet ebpf_exporter.service || systemctl enable ebpf_exporter.service
 fi
 
+
 # Set the scheduler and other block device tunables for all disks
-for device in \$(ls /sys/block/sd?/);
+for device in /sys/block/sd*;
 do
-    echo "${scheduler}" > \${device}/queue/scheduler
-    echo "${read_ahead_kb}" > \${device}/queue/read_ahead_kb
-    echo "${max_sectors_kb}" > \${device}/queue/max_sectors_kb
-    # echo "${queue_depth}" > \${device}/queue/nr_queue -> need to check kernel rev
-
-
-    cat \${device}
+    sudo echo ${scheduler} > \$device/queue/scheduler
+    sudo echo ${read_ahead_kb} > \$device/queue/read_ahead_kb
+    sudo echo ${max_sectors_kb} > \$device/queue/max_sectors_kb
 done
+echo "${transparent_hugepage}" > /sys/kernel/mm/transparent_hugepage/enabled
 
 # rc.local always wants a 0
 exit 0
 EOF
+
+# echo "${queue_depth}" > /sys/block/\${device}/queue/nr_queue -> need to check kernel rev
 
 fi
 
@@ -178,15 +195,23 @@ do
     if [ ${OOMKILLER_OFF} -eq 1 ]; then
         # TBD use inotifywait
         if [ ! "1" = "$(cat ${PROCMNT}/sys/vm/panic_on_oom)" ]; then
-            echo 1 > ${PROCMNT}/sys/vm/panic_on_oom
+            sudo echo 1 > ${PROCMNT}/sys/vm/panic_on_oom
         fi
 
         if [[ "$(grep -c "vm.panic_on_oom=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then
             echo "vm.panic_on_oom=1" >> ${ETCMNT}/sysctl.conf
         fi
 
+        if [ ! "0" = "$(cat ${PROCMNT}/sys/vm/swappiness)" ]; then
+            sudo echo 0 > ${PROCMNT}/sys/vm/swappiness
+        fi
+
+        if [[ "$(grep -c "vm.swappiness=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then
+            echo "vm.swappiness=1" >> ${ETCMNT}/sysctl.conf
+        fi
+
         if [ ! "5" = "$(cat ${PROCMNT}/sys/kernel/panic)" ]; then
-            echo 5 > ${PROCMNT}/sys/kernel/panic
+            sudo echo 5 > ${PROCMNT}/sys/kernel/panic
         fi
 
         if [[ "$(grep -c "kernel.panic=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then
@@ -194,6 +219,7 @@ do
         fi
     fi
     sleep 1
+
 done
 
 

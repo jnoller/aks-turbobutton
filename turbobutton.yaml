@@ -6,7 +6,7 @@ metadata:
 data:
   TB_TUNEDEVS: "1" # If true then we will drop in the tuned rc.local file
   TB_REHOMEIO: "1" # If true the docker/ and kubelet/ directories are moved to tmpfs
-  TB_SCHEDULER: "noop"
+  TB_SCHEDULER: "mq-deadline"
   TB_READ_AHEAD_KB: "4096"
   TB_MAX_SECTORS_KB: "128"
   TB_QUEUE_DEPTH: "64" # Need to validate Azure guidance re: qdepth
@@ -14,6 +14,7 @@ data:
   INST_EBPF_EXPORTER: "1"
   INST_FLAMEGRAPH: "1"
   OOMKILLER_OFF: "1"
+  TRANSPARENT_HUGEPAGE: "always"
 ---
 apiVersion: apps/v1
 kind: DaemonSet
