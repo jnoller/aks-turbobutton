@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
+
+
+
 ns=aks-turbobutton
-if ! kubectl get ns $ns; then
-  kubectl create ns $ns
-  while ! kubectl get ns $ns > /dev/null ;do
+if ! kubectl get namespace ${ns} 2>/dev/null >/dev/null; then
+    kubectl create namespace ${ns}
     sleep 5
-  done
 fi
 
-kubectl create configmap aks-turbobutton --from-file=fix-node.sh -o yaml --dry-run | kubectl replace -f -
+kubectl create configmap -n $ns aks-turbobutton --from-file=fix-node.sh -o yaml --dry-run | kubectl replace --force -f -
 kubectl apply -f turbobutton.yaml
+
 #helm install tb -f values.yaml stable/prometheus-operator --namespace aks-turbobutton

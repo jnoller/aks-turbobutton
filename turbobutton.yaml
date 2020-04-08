@@ -10,6 +10,10 @@ data:
   TB_READ_AHEAD_KB: "4096"
   TB_MAX_SECTORS_KB: "128"
   TB_QUEUE_DEPTH: "64" # Need to validate Azure guidance re: qdepth
+  INST_BPFTRACE: "1"
+  INST_EBPF_EXPORTER: "1"
+  INST_FLAMEGRAPH: "1"
+  OOMKILLER_OFF: "1"
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -47,6 +51,8 @@ spec:
         volumeMounts:
         - name: turbobutton
           mountPath: /scripts
+        - name: procmnt
+          mountPath: /procmnt
         - name: etcmnt
           mountPath: /etcmnt
         - name: usrmnt
@@ -62,6 +68,9 @@ spec:
         configMap:
           name: aks-turbobutton
           defaultMode: 0744
+      - name: procmnt
+        hostPath:
+          path: /proc
       - name: etcmnt
         hostPath:
           path: /etc

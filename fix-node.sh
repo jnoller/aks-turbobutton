@@ -6,7 +6,7 @@
 # on any Ubuntu 16.04 Xenial worker node. This script installs:
 
 # 1. IOVisor bcc tools / bpftrace
-# 2. Clouderas eBPF exporter
+# 2. Cloudflare's eBPF exporter
 # 3. Brendan Greggs flamegraph scripts
 # 4. A customized rc.local that overrides the worker nodes IO settings
 # TBD: 5. Moves all docker/ and kubelet/ data to the nodes tmpfs
@@ -34,13 +34,14 @@ PYTHONMNT="/pythonmnt"
 ETCMNT="/etcmnt"
 USRLOCALMNT="/usrlocalmnt"
 CLOUDMNT="/cloudmnt"
+PROCMNT="/procmnt"
 
 
 # Install options
 INST_BPFTRACE=${TB_INST_BPFTRACE:=1}
 INST_EBPF_EXPORTER=${EBPF_EXPORTER:=1}
 INST_FLAMEGRAPH=${FLAMEGRAPH:=1}
-
+OOMKILLER_OFF=${OOMKILLER_OFF:=1}
 
 
 if [ "${INST_BPFTRACE}" -eq 1 ]; then
@@ -136,13 +137,80 @@ EOF
 fi
 
 
-
-
 cat <<EOF >${ETCMNT}/profile.d/turbobutton.sh
     echo "==========================================="
     echo "  aks-turbobutton applied"
     echo "  missing linux tunings: /etc/rc.local"
+    echo "      IO scheduler:           ${scheduler}"
+    echo "      Read Ahead kb:          ${read_ahead_kb}"
+    echo "      Max Sector kb:          ${max_sectors_kb}"
+    echo "      "
     echo "  bpf tools: /usr/local/share/bcc/tools/"
     echo "             https://iovisor.github.io/bcc/"
     echo "==========================================="
 EOF
+
+#
+# At this point the script (and container) would exit. However, in later
+# versions of Kubernetes the Linux OOMKiller is forcefully re-enabled. The
+# negative behavior/lack of control with the OOMKiller system ultimately leaving
+# worker nodes, critical pods and services in an unknown and broken state.
+#
+# As this is forced on, we will loop forever watching the settings and restoring
+# sane defaults to the system. (Panic on oom, 5 second wait till panic)
+#
+# https://sysdig.com/blog/troubleshoot-kubernetes-oom/
+# https://medium.com/@zhimin.wen/memory-limit-of-pod-and-oom-killer-891ee1f1cad8
+# https://stackoverflow.com/questions/57855013/why-would-kubernetes-oom-kill-a-pause-container
+#
+# https://github.com/kubernetes/kubernetes/issues/74151
+#
+# "... the system is prone to return to an unstable state since the containers
+#  that are killed due to OOM are either restarted or a new pod is scheduled
+#  on to the node."
+# https://github.com/kubernetes/kubernetes/issues/74151#issuecomment-481750191
+#
+# Also - since we are in a watch-loop, we add the requires taints/labels to
+# expose the other metrics endpoints AKS does not:
+
+while :
+do
+    if [ ${OOMKILLER_OFF} -eq 1 ]; then
+        # TBD use inotifywait
+        if [ ! "1" = "$(cat ${PROCMNT}/sys/vm/panic_on_oom)" ]; then
+            echo 1 > ${PROCMNT}/sys/vm/panic_on_oom
+        fi
+
+        if [[ "$(grep -c "vm.panic_on_oom=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then
+            echo "vm.panic_on_oom=1" >> ${ETCMNT}/sysctl.conf
+        fi
+
+        if [ ! "5" = "$(cat ${PROCMNT}/sys/kernel/panic)" ]; then
+            echo 5 > ${PROCMNT}/sys/kernel/panic
+        fi
+
+        if [[ "$(grep -c "kernel.panic=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then
+            echo "kernel.panic=5" >> ${ETCMNT}/sysctl.conf
+        fi
+    fi
+    sleep 1
+done
+
+
+# TBD: Explore
+# vm.overcommit_memory = 2
+# vm.overcommit_kbytes = 0
+# Then also run the commands sysctl vm.overcommit_memory=2 and sysctl vm.overcommit_kbytes=0 to avoid the need to reboot.
+#https://superuser.com/questions/1150215/disabling-oom-killer-on-ubuntu-14-04
+
+
+# TODO:
+
+# Re factor away from using the rc.local file where possible - instead add the
+# loading into the loop above - this avoids the need to reboot to run experiments
+#
+# while :
+# for setting in setting
+# echo > /proc (live)
+# alter sysctl.conf (persistent)
+#
