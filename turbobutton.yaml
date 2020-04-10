@@ -4,12 +4,12 @@ metadata:
   name: turbobutton-able-tunas
   namespace: aks-turbobutton
 data:
-  TB_TUNEDEVS: "1" # If true then we will drop in the tuned rc.local file
-  TB_REHOMEIO: "1" # If true the docker/ and kubelet/ directories are moved to tmpfs
-  TB_SCHEDULER: "mq-deadline"
-  TB_READ_AHEAD_KB: "4096"
-  TB_MAX_SECTORS_KB: "128"
-  TB_QUEUE_DEPTH: "64" # Need to validate Azure guidance re: qdepth
+  TUNEDEVS: "0" # If true then we will drop in the tuned rc.local file
+  REHOMEIO: "1" # If true the docker/ and kubelet/ directories are moved to tmpfs
+  SCHEDULER: "mq-deadline"
+  READ_AHEAD_KB: "4096"
+  MAX_SECTORS_KB: "128"
+  QUEUE_DEPTH: "64" # Need to validate Azure guidance re: qdepth
   INST_BPFTRACE: "1"
   INST_EBPF_EXPORTER: "1"
   INST_FLAMEGRAPH: "1"
@@ -52,6 +52,8 @@ spec:
         volumeMounts:
         - name: turbobutton
           mountPath: /scripts
+        - name: turbobutton-io
+          mountPath: /scripts-io
         - name: procmnt
           mountPath: /procmnt
         - name: etcmnt
@@ -69,6 +71,9 @@ spec:
         configMap:
           name: aks-turbobutton
           defaultMode: 0744
+      - name: turbobutton-io
+        configMap:
+          name: aks-turbobutton-io
       - name: procmnt
         hostPath:
           path: /proc

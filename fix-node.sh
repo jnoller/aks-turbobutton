@@ -9,7 +9,7 @@
 # 2. Cloudflare's eBPF exporter
 # 3. Brendan Greggs flamegraph scripts
 # 4. A customized rc.local that overrides the worker nodes IO settings
-# TBD: 5. Moves all docker/ and kubelet/ data to the nodes tmpfs
+# TBD: 5. Moves all docker/ kubelet/ data to the nodes tmpfs
 # TBD: 6. Installs node problem detector in stand-alone mode so it's not trapped in
 #         the main IO path mess (e.g. local kubelet & failure)
 #
@@ -26,15 +26,16 @@
 # kernel.numa_balancing = 0 vs 1 (depends on the kernel version)
 # /queue/rq_affinity 2 (nr_requests 256, readahead 256)
 #
+# --experimental-kernel-memcg-notification=true == oomkiller / alt - see notes - set on kubelet
+# See this list of sysctls: https://gist.github.com/alexeldeib/fecddb6ee772e1966d5ed68e1dca0d5c
 
 
-
-TB_TUNEDEVS=${TB_TUNEDEVS:=1} # If true then we will drop in the tuned rc.local file
-TB_REHOMEIO=${TB_REHOMEIO:=1} # If true the docker/ and kubelet/ directories are moved to tmpfs
-scheduler=${TB_SCHEDULER:="noop"}
-read_ahead_kb=${TB_READ_AHEAD_KB:="4096"}
-max_sectors_kb=${TB_MAX_SECTORS_KB:="128"}
-queue_depth=${TB_MAX_SECTORS_KB:="64"} # Need to validate Azure guidance re: qdepth also kernel ver
+TUNEDEVS=${TUNEDEVS:=1} # If true then we will drop in the tuned rc.local file
+REHOMEIO=${REHOMEIO:=1} # If true the docker/ and kubelet/ directories are moved to tmpfs
+scheduler=${SCHEDULER:="noop"}
+read_ahead_kb=${READ_AHEAD_KB:="4096"}
+max_sectors_kb=${MAX_SECTORS_KB:="128"}
+queue_depth=${MAX_SECTORS_KB:="64"} # Need to validate Azure guidance re: qdepth also kernel ver
 transparent_hugepage=${TRANSPARENT_HUGEPAGE:="always"}
 
 
@@ -53,10 +54,17 @@ PROCMNT="/procmnt"
 
 
 # Install options
-INST_BPFTRACE=${TB_INST_BPFTRACE:=1}
+INST_BPFTRACE=${INST_BPFTRACE:=1}
 INST_EBPF_EXPORTER=${EBPF_EXPORTER:=1}
 INST_FLAMEGRAPH=${FLAMEGRAPH:=1}
 OOMKILLER_OFF=${OOMKILLER_OFF:=1}
+
+
+if [ "${REHOMEIO}" -eq 1 ]; then
+    cat /scripts-io/isolate-io-paths.sh > ${ETCMNT}/isolate_io_paths.sh
+    chmod a+x ${ETCMNT}/isolate_io_paths.sh
+fi
+
 
 
 if [ "${INST_BPFTRACE}" -eq 1 ]; then
@@ -99,9 +107,11 @@ fi
 
 # Install Brendan Gregg's flamegraph tools
 if [ ${INST_FLAMEGRAPH} -eq 1 ]; then
+    apt-get install -y git
     rm -rf ${USRMNT}/flamegraph ${USRMNT}/heatmap
-    mv /flamegraph ${USRMNT}/flamegraph && chmod +x ${USRMNT}/flamegraph/*.pl
-    mv /heatmap ${USRMNT}/heatmap && chmod +x ${USRMNT}/heatmap/*.pl
+    # this will saturate the host VM if you git clone to /
+    git clone https://github.com/brendangregg/FlameGraph /flamegraph && mv /flamegraph ${USRMNT}/flamegraph && chmod +x ${USRMNT}/flamegraph/*.pl
+    git clone https://github.com/brendangregg/HeatMap /heatmap && mv /heatmap ${USRMNT}/heatmap && chmod +x ${USRMNT}/heatmap/*.pl
 
 cat <<EOF >${ETCMNT}/profile.d/flamegraph.sh
     PATH=\$PATH:/heatmap:/flamegraph
@@ -112,7 +122,7 @@ fi
 # Inject a custom rc.local generated from the values above. Variables are
 # expanded automatically by the `cat <<EOF` if they are ${} style - $\{} should
 # pass through into the script, but that would be silly.
-if [ $TB_TUNEDEVS -eq 1 ]; then
+if [ $TUNEDEVS -eq 1 ]; then
     rm -f ${ETCMNT}/rc.local.backup && cp ${ETCMNT}/rc.local ${ETCMNT}/rc.local.backup
     echo "" >${ETCMNT}/rc.local
 
@@ -130,9 +140,14 @@ cat <<EOF >${ETCMNT}/rc.local
 #
 # By default this script does nothing.
 
-if [ -e "/systemd/system/ebpf_exporter.service" ]; then
-    systemctl is-active --quiet ebpf_exporter.service || systemctl daemon-reload
-    systemctl is-active --quiet ebpf_exporter.service || systemctl enable ebpf_exporter.service
+if [ -e /etc/isolate_io_paths.sh ]; then
+    isolate_io_paths.sh || exit 0
+fi
+
+if [ ! "enabled" = "\$(systemctl is-enabled ebpf_exporter.service)" ]; then
+    systemctl daemon-reload
+    systemctl enable ebpf_exporter.service
+    systemctl restart ebpf_exporter.service
 fi
 
 
@@ -143,14 +158,28 @@ do
     sudo echo ${read_ahead_kb} > \$device/queue/read_ahead_kb
     sudo echo ${max_sectors_kb} > \$device/queue/max_sectors_kb
 done
+
+# Transparent huge pages
 echo "${transparent_hugepage}" > /sys/kernel/mm/transparent_hugepage/enabled
+
+if [ ! "1" = "\$(cat /sys/vm/panic_on_oom)" ]; then
+    sudo echo 1 > /sys/vm/panic_on_oom
+fi
+
+if [ ! "0" = "\$(cat /sys/vm/swappiness)" ]; then
+    sudo echo 0 > /sys/vm/swappiness
+fi
+
+if [ ! "5" = "$(cat ${PROCMNT}/sys/kernel/panic)" ]; then
+    sudo echo 5 > ${PROCMNT}/sys/kernel/panic
+fi
+
 
 # rc.local always wants a 0
 exit 0
 EOF
 
 # echo "${queue_depth}" > /sys/block/\${device}/queue/nr_queue -> need to check kernel rev
-
 fi
 
 
@@ -166,6 +195,14 @@ cat <<EOF >${ETCMNT}/profile.d/turbobutton.sh
     echo "             https://iovisor.github.io/bcc/"
     echo "==========================================="
 EOF
+
+if [ ${REHOMEIO} -eq 1 ]; then
+cat <<EOF >>${ETCMNT}/profile.d/turbobutton.sh
+    echo "  aks-turbobutton applied"
+    echo "  docker and kubelet bindmounted to: "
+    echo "==========================================="
+EOF
+fi
 
 #
 # At this point the script (and container) would exit. However, in later
@@ -190,28 +227,18 @@ EOF
 # Also - since we are in a watch-loop, we add the requires taints/labels to
 # expose the other metrics endpoints AKS does not:
 
+echo "entering infinite --funroll loops"
 while :
 do
     if [ ${OOMKILLER_OFF} -eq 1 ]; then
         # TBD use inotifywait
-        if [ ! "1" = "$(cat ${PROCMNT}/sys/vm/panic_on_oom)" ]; then
-            sudo echo 1 > ${PROCMNT}/sys/vm/panic_on_oom
-        fi
 
         if [[ "$(grep -c "vm.panic_on_oom=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then
             echo "vm.panic_on_oom=1" >> ${ETCMNT}/sysctl.conf
         fi
 
-        if [ ! "0" = "$(cat ${PROCMNT}/sys/vm/swappiness)" ]; then
-            sudo echo 0 > ${PROCMNT}/sys/vm/swappiness
-        fi
-
         if [[ "$(grep -c "vm.swappiness=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then
             echo "vm.swappiness=1" >> ${ETCMNT}/sysctl.conf
-        fi
-
-        if [ ! "5" = "$(cat ${PROCMNT}/sys/kernel/panic)" ]; then
-            sudo echo 5 > ${PROCMNT}/sys/kernel/panic
         fi
 
         if [[ "$(grep -c "kernel.panic=" ${ETCMNT}/sysctl.conf)" -eq 0 ]]; then

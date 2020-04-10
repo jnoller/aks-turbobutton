@@ -8,6 +8,7 @@ if ! kubectl get namespace ${ns} 2>/dev/null >/dev/null; then
     sleep 5
 fi
 
+kubectl create configmap -n $ns aks-turbobutton-io --from-file=isolate-io-paths.sh -o yaml --dry-run | kubectl replace --force -f -
 kubectl create configmap -n $ns aks-turbobutton --from-file=fix-node.sh -o yaml --dry-run | kubectl replace --force -f -
 kubectl apply -f turbobutton.yaml
 
