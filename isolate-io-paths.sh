@@ -164,7 +164,7 @@ add_logs_bindmount () {
 mutate_docker_config () {
     # from: https://github.com/juan-lee/aks-reroot
     cp -f /etc/docker/daemon.json /etc/docker/daemon.json-${STAMP}.bak
-    cat /etc/docker/daemon.json | jq --arg data_root "$1" '. + {"data-root": $data_root}' > /etc/docker/daemon.json.new
+    cat /etc/docker/daemon.json | jq --arg data_root "${DOCKER_DATA_ROOT}" '. + {"data-root": $data_root' > /etc/docker/daemon.json.new
     mv -f /etc/docker/daemon.json.new /etc/docker/daemon.json
 
 }
@@ -172,14 +172,14 @@ mutate_docker_config () {
 mutate_kube_config () {
     # modified from: https://github.com/juan-lee/aks-reroot/blob/master/aks-ssd-reroot.yaml
     cp -f /etc/default/kubelet /etc/default/kubelet-${STAMP}.bak
-    var=$(grep "KUBELET_OPTS=" /etc/default/kubelet | grep 'root-dir' | grep $1 )
+    var=$(grep "KUBELET_OPTS=" /etc/default/kubelet | grep 'root-dir' | grep ${KUBELET_DATA_ROOT} )
     if [[ ! -z "$var" ]]; then
         return
     fi
 
     var=$(grep "KUBELET_OPTS=" /etc/default/kubelet | grep 'root-dir' )
     if [[ ! -z "$var" ]]; then
-        echo "configuring kubelet work dir to $1"
+        echo "configuring kubelet work dir to ${KUBELET_DATA_ROOT}"
         sed -i "s~\(root-dir=\).* \(.*\)~\1$KUBELET_DATA_ROOT \2~g" /etc/default/kubelet
     else
         sed -i "s~KUBELET_OPTS=.*~KUBELET_OPTS=--root-dir=$KUBELET_DATA_ROOT~" /etc/default/kubelet

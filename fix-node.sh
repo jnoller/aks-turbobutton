@@ -61,11 +61,9 @@ OOMKILLER_OFF=${OOMKILLER_OFF:=1}
 
 
 if [ "${REHOMEIO}" -eq 1 ]; then
-    cat /scripts-io/isolate-io-paths.sh > ${ETCMNT}/isolate_io_paths.sh
+    echo -e "$(cat /scripts-io/isolate-io-paths.sh)" > ${ETCMNT}/isolate_io_paths.sh
     chmod a+x ${ETCMNT}/isolate_io_paths.sh
 fi
-
-
 
 if [ "${INST_BPFTRACE}" -eq 1 ]; then
     apt update && apt install python libelf-dev -y
@@ -109,6 +107,7 @@ fi
 if [ ${INST_FLAMEGRAPH} -eq 1 ]; then
     apt-get install -y git
     rm -rf ${USRMNT}/flamegraph ${USRMNT}/heatmap
+    rm -rf /flamegraph /heatmap
     # this will saturate the host VM if you git clone to /
     git clone https://github.com/brendangregg/FlameGraph /flamegraph && mv /flamegraph ${USRMNT}/flamegraph && chmod +x ${USRMNT}/flamegraph/*.pl
     git clone https://github.com/brendangregg/HeatMap /heatmap && mv /heatmap ${USRMNT}/heatmap && chmod +x ${USRMNT}/heatmap/*.pl
