@@ -32,7 +32,7 @@
 
 TUNEDEVS=${TUNEDEVS:=1} # If true then we will drop in the tuned rc.local file
 REHOMEIO=${REHOMEIO:=1} # If true the docker/ and kubelet/ directories are moved to tmpfs
-scheduler=${SCHEDULER:="noop"}
+scheduler=${SCHEDULER:="mq-deadline"}
 read_ahead_kb=${READ_AHEAD_KB:="4096"}
 max_sectors_kb=${MAX_SECTORS_KB:="128"}
 queue_depth=${MAX_SECTORS_KB:="64"} # Need to validate Azure guidance re: qdepth also kernel ver
