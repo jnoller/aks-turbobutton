@@ -135,7 +135,7 @@ check_logs_bindmount () {
 
 move_and_fstab_kubelet () {
     mv -f ${KUBELET_ORIG_ROOT} ${KUBELET_DATA_ROOT} || exit 1
-    echo "/mnt/kublet /var/lib/kubelet       none    bind,nobootwait 0 0" >>/etc/fstab
+    echo "/mnt/kubelet /var/lib/kubelet       none    bind,nobootwait 0 0" >>/etc/fstab
 }
 
 move_and_fstab_docker () {
@@ -160,30 +160,10 @@ add_logs_bindmount () {
     mount --bind ${LOGS_DATA_ROOT} ${LOGS_ORIG_ROOT} || exit 1 # fail hard.
 }
 
-
 mutate_docker_config () {
-    # from: https://github.com/juan-lee/aks-reroot
     cp -f /etc/docker/daemon.json /etc/docker/daemon.json-${STAMP}.bak
     cat /etc/docker/daemon.json | jq --arg data_root "${DOCKER_DATA_ROOT}" '. + {"data-root": $data_root' > /etc/docker/daemon.json.new
     mv -f /etc/docker/daemon.json.new /etc/docker/daemon.json
-
-}
-
-mutate_kube_config () {
-    # modified from: https://github.com/juan-lee/aks-reroot/blob/master/aks-ssd-reroot.yaml
-    cp -f /etc/default/kubelet /etc/default/kubelet-${STAMP}.bak
-    var=$(grep "KUBELET_OPTS=" /etc/default/kubelet | grep 'root-dir' | grep ${KUBELET_DATA_ROOT} )
-    if [[ ! -z "$var" ]]; then
-        return
-    fi
-
-    var=$(grep "KUBELET_OPTS=" /etc/default/kubelet | grep 'root-dir' )
-    if [[ ! -z "$var" ]]; then
-        echo "configuring kubelet work dir to ${KUBELET_DATA_ROOT}"
-        sed -i "s~\(root-dir=\).* \(.*\)~\1$KUBELET_DATA_ROOT \2~g" /etc/default/kubelet
-    else
-        sed -i "s~KUBELET_OPTS=.*~KUBELET_OPTS=--root-dir=$KUBELET_DATA_ROOT~" /etc/default/kubelet
-    fi
 
 }
 
@@ -196,7 +176,6 @@ restart_services() {
 }
 
 shutdown_node_services () {
-    return # testing only
     systemctl is-active --quiet docker || docker stop $(docker ps -a -q)
     systemctl is-active --quiet docker || systemctl stop docker
     systemctl is-active --quiet kubelet || systemctl stop kubelet
@@ -223,9 +202,6 @@ main () {
         # thot: removing the additional function call and bindmounting in the
         # same func might be safer.
         add_kube_bindmount || exit 1
-        # Finally change the config files - if this fails, the system should
-        # still function. I feel like a naughty god.
-        mutate_kube_config || exit 1
     fi
     if [ ! $(check_docker_bindmount) ]; then
         cp /etc/fstab /etc/fstab.akstb.${stamp}-predocker.bak

@@ -4,7 +4,7 @@ metadata:
   name: turbobutton-able-tunas
   namespace: aks-turbobutton
 data:
-  TUNEDEVS: "0" # If true then we will drop in the tuned rc.local file
+  TUNEDEVS: "1" # If true then we will drop in the tuned rc.local file
   REHOMEIO: "1" # If true the docker/ and kubelet/ directories are moved to tmpfs
   SCHEDULER: "mq-deadline"
   READ_AHEAD_KB: "4096"

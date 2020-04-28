@@ -90,7 +90,7 @@ if [ "${INST_EBPF_EXPORTER}" -eq 1 ]; then
     # add in the bpf exporter -> sends IO latency metrics to prom
     wget -c ${EXPORTER} || exit 1
     tar -xzf ebpf_exporter*.tar.gz
-    mv ebpf_exporter-*/ebpf_exporter ${USRMNT}/bin || exit 1
+    mv ebpf_exporter-*/ebpf_exporter ${USRLOCALMNT}/bin || exit 1
     wget -c ${SVCFILE} || exit 1
     mv ebpf_exporter.service ${ETCMNT}/systemd/system/ebpf_exporter.service
 
@@ -140,7 +140,7 @@ cat <<EOF >${ETCMNT}/rc.local
 # By default this script does nothing.
 
 if [ -e /etc/isolate_io_paths.sh ]; then
-    isolate_io_paths.sh || exit 0
+    /etc/isolate_io_paths.sh || exit 0
 fi
 
 if [ ! "enabled" = "\$(systemctl is-enabled ebpf_exporter.service)" ]; then
@@ -161,16 +161,20 @@ done
 # Transparent huge pages
 echo "${transparent_hugepage}" > /sys/kernel/mm/transparent_hugepage/enabled
 
-if [ ! "1" = "\$(cat /sys/vm/panic_on_oom)" ]; then
-    sudo echo 1 > /sys/vm/panic_on_oom
+# Disable protected kernel defaults - this is on for CIS compliance but enforces
+# the OOMKiller settings
+sed -i 's/--protect-kernel-defaults=true/--protect-kernel-defaults=false/g' /etc/default/kubelet
+
+if [ ! "1" = "\$(cat /proc/sys/vm/panic_on_oom)" ]; then
+    sudo echo 1 > /proc/sys/vm/panic_on_oom
 fi
 
-if [ ! "0" = "\$(cat /sys/vm/swappiness)" ]; then
-    sudo echo 0 > /sys/vm/swappiness
+if [ ! "0" = "\$(cat /proc/sys/vm/swappiness)" ]; then
+    sudo echo 0 > /proc/sys/vm/swappiness
 fi
 
-if [ ! "5" = "$(cat ${PROCMNT}/sys/kernel/panic)" ]; then
-    sudo echo 5 > ${PROCMNT}/sys/kernel/panic
+if [ ! "5" = "$(cat /proc/sys/kernel/panic)" ]; then
+    sudo echo 5 > /proc/sys/kernel/panic
 fi
 
 
