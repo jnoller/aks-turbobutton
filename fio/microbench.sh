@@ -10,7 +10,7 @@
 
 
 resultsdir='fio-results'
-drive_dirs=("/32gb" "2048gb" "/1024tb")
+drive_dirs=("/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
 
 interrogate () {
@@ -60,7 +60,7 @@ function onexit() {
 }
 
 commands=("time git clone git@github.com:MicrosoftDocs/azure-docs.git && rm -rf azure-docs")
-
+commands=("time ls")
 
 main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
@@ -71,7 +71,7 @@ main () {
         for comm in "${commands[@]}"; do
             echo ${comm}
             # Need to stop/start the watchers for each test
-            $comm
+            echo -n "$(comm)"
         done
     done
 }
