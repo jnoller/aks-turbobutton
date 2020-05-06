@@ -59,8 +59,7 @@ function onexit() {
     done
 }
 
-commands=("git clone git@github.com:MicrosoftDocs/azure-docs.git $scratch_dir/")
-commands=("time ls")
+commands=("/usr/bin/git clone git@github.com:MicrosoftDocs/azure-docs.git $scratch_dir/")
 
 main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
