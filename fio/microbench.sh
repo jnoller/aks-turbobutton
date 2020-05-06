@@ -65,7 +65,7 @@ main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
     rm -rf "${resultsdir}" && mkdir -p "${resultsdir}"
 
-    commands=("/usr/bin/git clone git@github.com:MicrosoftDocs/azure-docs.git $SCR")
+    commands=("/usr/bin/bash && time /usr/bin/git clone git@github.com:MicrosoftDocs/azure-docs.git $SCR")
 
 
 
@@ -77,7 +77,7 @@ main () {
             mkdir -p "${scr}"
             echo "running   " "${comm}"
             # Need to stop/start the watchers for each test
-            time "export SCR=${scr} && env && $comm" || exit 1
+            "export SCR=${scr} && env && $comm"
             rm -rf "${directory}/scratch-temp"
         done
     done
