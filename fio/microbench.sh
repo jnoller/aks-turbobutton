@@ -59,7 +59,7 @@ function onexit() {
     done
 }
 
-commands=("/usr/bin/git clone git@github.com:MicrosoftDocs/azure-docs.git $scratch_dir/")
+commands=("/usr/bin/git clone git@github.com:MicrosoftDocs/azure-docs.git scratch-temp")
 
 main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
@@ -67,12 +67,12 @@ main () {
     for directory in "${drive_dirs[@]}"; do
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*" || echo 'clear'
-        scratch_dir="${directory}/scratch"
         export scratch_dir
         for comm in "${commands[@]}"; do
             echo ${comm}
             # Need to stop/start the watchers for each test
             time "$comm"
+            rm -rf "${directory}/scratch-temp"
         done
     done
 }
