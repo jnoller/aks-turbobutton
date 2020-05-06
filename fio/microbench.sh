@@ -77,7 +77,7 @@ main () {
             mkdir -p "${scr}"
             echo "running   " "${comm}"
             # Need to stop/start the watchers for each test
-            time "export SCR=${scr} && $comm" || exit 1
+            time "export SCR=${scr} && env && $comm" || exit 1
             rm -rf "${directory}/scratch-temp"
         done
     done
