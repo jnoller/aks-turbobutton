@@ -68,6 +68,7 @@ main () {
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*" || echo 'clear'
         scratch_dir="${directory}/scratch"
+        export scratch_dir
         for comm in "${commands[@]}"; do
             echo ${comm}
             # Need to stop/start the watchers for each test
