@@ -66,14 +66,13 @@ main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
     rm -rf ${resultsdir} && mkdir -p resultsdir
     for directory in "${drive_dirs[@]}"; do
-        (
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*" || echo 'clear'
         for comm in "${commands[@]}"; do
+            echo ${comm}
             # Need to stop/start the watchers for each test
             $comm
         done
-        )
     done
 }
 
