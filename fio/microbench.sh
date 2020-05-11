@@ -10,6 +10,7 @@
 
 
 resultsdir='fio-results'
+testsdir='micro_tests'
 drive_dirs=("/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
 
@@ -63,20 +64,22 @@ function onexit() {
 
 main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
+    echo "checking ${resultsdir}"
     mkdir -p "${resultsdir}"
 
-
-
     for directory in "${drive_dirs[@]}"; do
+        echo "moving to ${directory}"
         cd "${directory}" || exit 1
-        rm -rf "${directory:?}/*" || echo 'clear'
-
+        rm -rf "${directory:?}/*"
+        echo "checking ${testsdir}"
         for filename in micro_tests/*.sh; do
+            echo "setting up for ${filename}"
             [ -e "$filename" ] || continue
             scr="${directory}/scratch-temp"
-            mkdir -p "${scr}"
+            mkdir -p "${scr}" && echo "made ${scr}"
             # Execute the command without timing to warm the cache
-            ${filename}
+            echo "warming the cache with initial ${filename} execution"
+            ${filename} >"${scr}/cmd.out.log"
             rm -rf "${scr}" && mkdir -p "${scr}"
             # Run a loop of 5 iterations
             for i in {0..5}; do
