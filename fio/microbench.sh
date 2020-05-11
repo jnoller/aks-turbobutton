@@ -85,7 +85,7 @@ main () {
             # Run a loop of 5 iterations
             for i in {0..5}; do
                 echo "${f} iteration $i ============ "
-                /usr/bin/time -a -o "${filename}.time.out" -f "%E real,%U user,%S sys" "${f} ${scr}"
+                /usr/bin/time -o "${filename}.time.out" --append -f "%E real,%U user,%S sys" "${f}" "${scr}"
                 rm -rf "${scr}" && mkdir -p "${scr}"
             done
 
