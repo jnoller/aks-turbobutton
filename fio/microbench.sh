@@ -72,14 +72,16 @@ main () {
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*"
         echo "checking ${testsdir}"
-        for filename in micro_tests/*.sh; do
+        for filename in "${testsdir}"/*.sh; do
+            if [[ ! -e "$filename" ]]; then
+                continue
+            fi
             echo "setting up for ${filename}"
-            [ -e "$filename" ] || continue
             scr="${directory}/scratch-temp"
             mkdir -p "${scr}" && echo "made ${scr}"
             # Execute the command without timing to warm the cache
             echo "warming the cache with initial ${filename} execution"
-            ${filename} >"${scr}/cmd.out.log"
+            "${testsdir}/$(basename ${filename}) ${scr}" >"${scr}/cmd.out.log"
             rm -rf "${scr}" && mkdir -p "${scr}"
             # Run a loop of 5 iterations
             for i in {0..5}; do
