@@ -9,8 +9,8 @@
 
 
 
-resultsdir='fio-results'
-testsdir='micro_tests'
+resultsdir="$PWD/fio-results"
+testsdir="$PWD/micro_tests"
 drive_dirs=("/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
 
@@ -72,23 +72,23 @@ main () {
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*"
         echo "checking ${testsdir}"
-        for filename in "${testsdir}"/*.sh; do
-            if [[ ! -e "$filename" ]]; then
-                continue
-            fi
-            echo "setting up for ${filename}"
+        globby="${testsdir}/*.sh"
+        for f in $globby; do
+            echo "setting up for ${f}"
             scr="${directory}/scratch-temp"
             mkdir -p "${scr}" && echo "made ${scr}"
             # Execute the command without timing to warm the cache
-            echo "warming the cache with initial ${filename} execution"
-            "${testsdir}/$(basename ${filename}) ${scr}" >"${scr}/cmd.out.log"
+            echo "warming the cache with initial ${f} execution"
+            "${testsdir}/$(basename ${f}) ${scr}" >"${scr}/cmd.out.log"
             rm -rf "${scr}" && mkdir -p "${scr}"
+
             # Run a loop of 5 iterations
             for i in {0..5}; do
-                echo "${filename} iteration $i ============ "
-                /usr/bin/time -a -o "${filename}.time.out" -f "%E real,%U user,%S sys" "${filename} ${scr}"
+                echo "${f} iteration $i ============ "
+                /usr/bin/time -a -o "${filename}.time.out" -f "%E real,%U user,%S sys" "${f} ${scr}"
                 rm -rf "${scr}" && mkdir -p "${scr}"
             done
+
             rm -rf "${directory}/scratch-temp"
         done
     done
