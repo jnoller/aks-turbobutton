@@ -102,7 +102,7 @@ main () {
                 base=$(basename "${script}")
                 result="${resultsdir}/${base}.$c.time.out"
                 echo "${script} iteration $c ============ "
-                /usr/bin/time -o "${result}" --append -f "%E real,%U user,%S sys" "${script}" "${result}"
+                /usr/bin/time -o "${result}" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
                 cat "${result}"
                 rm -rf "${scr}" && mkdir -p "${scr}"
             done
