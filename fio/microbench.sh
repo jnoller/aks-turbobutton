@@ -99,7 +99,8 @@ main () {
 
             # Run a loop of $MAXRUNS iterations
             for (( c=1; c<=MAXRUNS; c++ )); do
-                result="${resultsdir}/${f}.time.out"
+                base=$(basename "${script}")
+                result="${resultsdir}/${base}.$c.time.out"
                 echo "${script} iteration $c ============ "
                 /usr/bin/time -o "${result}" --append -f "%E real,%U user,%S sys" "${script}" "${result}"
                 cat "${result}"
