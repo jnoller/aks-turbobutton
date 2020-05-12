@@ -89,7 +89,7 @@ main () {
                 echo "${script}"
                 echo "${scriptpath}"
             fi
-            bash script > ${scr}/cmd.out.log
+            bash ${script} > ${scr}/cmd.out.log
             rm -rf "${scr}" && mkdir -p "${scr}"
 
             # Run a loop of 5 iterations
