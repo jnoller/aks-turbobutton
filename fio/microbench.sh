@@ -86,8 +86,8 @@ main () {
             echo "setting up for ${f}"
             scr="${directory}/scratch-temp"
             # Setup scratch directory for tests
-            mkdir -p "${scr}" && echo "made ${scr}" || exit $?
-
+            rm -rf "${scr}" && mkdir -p "${scr}"
+            echo "made ${scr}"
             # Execute the command without timing to warm the cache
             echo "warming the cache with initial ${f} execution"
             script=$(realpath "${f}")
