@@ -8,6 +8,9 @@
 # /dev/sdc1      2113655728 13655060 1992610156   1% /2048gb
 
 
+DEBUG=${DEBUG:=0}
+MAXRUNS=${MAXRUNS:=5}
+BCCON=${BCCON:0}
 
 resultsdir="$PWD/microbench-results"
 testsdir="$PWD/micro_tests"
@@ -41,11 +44,13 @@ spawn_watchers () {
     biosnoop_cmd="biosnoop -Q >${resultsdir}/biosnoop.log"
     gethostlatency_cmd="gethostlatency >${resultsdir}/hostlatency.log"
     schedulerlat_cmd="runqlat -m 5 >${resultsdir}/scheduler-latency.log"
+    if [ "${BCCON}" -eq 1 ]; then
     # command_list=(iottop_cmd iostat_cmd ext4slower_cmd biosnoop_cmd gethostlatency schedulerlat_cmd)
-    # command_list=(ext4slower_cmd biosnoop_cmd gethostlatency schedulerlat_cmd)
     # command_list=(ext4slower_cmd biosnoop_cmd)
-    command_list=(iottop_cmd iostat_cmd)
-    #forks=()
+        command_list=(ext4slower_cmd biosnoop_cmd gethostlatency schedulerlat_cmd)
+    else
+        command_list=(iottop_cmd iostat_cmd)
+    fi
     for comm in "${command_list[@]}"; do
         ${comm} &
         new_pid=$!
@@ -83,7 +88,7 @@ main () {
             echo "warming the cache with initial ${f} execution"
             script=$(realpath "${f}")
             scriptpath=$(dirname "${script}")
-            if [ "${DEBUG:=0}" -eq 1 ]; then
+            if [ "${DEBUG}" -eq 1 ]; then
                 echo "${f}"
                 echo "${scr}"
                 echo "${script}"
@@ -92,9 +97,8 @@ main () {
             bash ${script} > ${scr}/cmd.out.log
             rm -rf "${scr}" && mkdir -p "${scr}"
 
-            # Run a loop of 5 iterations
-            max="{$MAXRUNS:=5}"
-            for (( c=1; c<=$max; c++ )); do
+            # Run a loop of $MAXRUNS iterations
+            for (( c=1; c<=MAXRUNS; c++ )); do
                 result="${resultsdir}/${f}.time.out"
                 echo "${script} iteration $c ============ "
                 /usr/bin/time -o "${result}.time.out" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
