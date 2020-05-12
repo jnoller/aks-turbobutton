@@ -98,7 +98,7 @@ main () {
                 echo "${script}"
                 echo "${scriptpath}"
             fi
-            bash "${script} ${scr}"> ${scr}/cmd.out.log
+            ${script} ${scr} > ${scr}/cmd.out.log
             rm -rf "${scr}" && mkdir -p "${scr}"
 
             # Run a loop of $MAXRUNS iterations
