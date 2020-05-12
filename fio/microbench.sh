@@ -2,6 +2,7 @@
 
 # Micro/user-case benchmark script
 
+# /os-disk
 # /dev/sdf1        32895856 13632448   17569356  44% /32gb
 # /dev/sde1       131979748    60984  125191548   1% /128gb
 # /dev/sdd1      1056762036 13656352  989402260   2% /1024gb
@@ -14,11 +15,11 @@ BCCON=${BCCON:0}
 
 resultsdir="$PWD/microbench-results"
 testsdir="$PWD/micro_tests"
-drive_dirs=("/32gb" "/128gb" "/1024gb" "/2048gb")
+drive_dirs=("/os-disk", "/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
 
 interrogate () {
-    fn=$resultsdir/system-info
+    fn="${resultsdir}/system-info"
     echo "$(uname -a)" >>$fn
     echo "$(echo "cpu:    ")" "$(cat /proc/cpuinfo  | grep "model name" | head -1 | cut -d":" -f2)" >>$fn
     echo "$(echo "cores:    ")" "$(cat /proc/cpuinfo  | grep processor | wc -l)" >>$fn
@@ -71,6 +72,8 @@ main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
     echo "checking ${resultsdir}"
     mkdir -p "${resultsdir}"
+
+    interrogate
 
     for directory in "${drive_dirs[@]}"; do
         echo "moving to ${directory}"
