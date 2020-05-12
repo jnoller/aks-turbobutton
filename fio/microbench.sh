@@ -15,7 +15,7 @@ BCCON=${BCCON:0}
 
 resultsdir="$PWD/microbench-results"
 testsdir="$PWD/micro_tests"
-drive_dirs=("/os-disk", "/32gb" "/128gb" "/1024gb" "/2048gb")
+drive_dirs=("/os-disk" "/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
 
 interrogate () {
