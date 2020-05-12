@@ -23,12 +23,13 @@ interrogate () {
     echo "$(uname -a)" >>$fn
     echo "$(echo "cpu:    ")" "$(cat /proc/cpuinfo  | grep "model name" | head -1 | cut -d":" -f2)" >>$fn
     echo "$(echo "cores:    ")" "$(cat /proc/cpuinfo  | grep processor | wc -l)" >>$fn
-    echo -n "\n\n" >> $fn
+    echo "===========================================================" >> $fn
     for device in /sys/block/sd*;
     do
-        sudo echo "$(echo "scheduler:    ")" "$(cat $device/queue/scheduler)" >>$fn
-        sudo echo "$(echo "read_ahead_kb:    ")" "$(cat $device/queue/read_ahead_kb)" >>$fn
-        sudo echo "$(echo "max_sectors_kb:    ")" "$(cat $device/queue/max_sectors_kb)" >>$fn
+
+        echo "$(echo "scheduler:    ")" "$(sudo cat $device/queue/scheduler)" >>$fn
+        echo "$(echo "read_ahead_kb:    ")" "$(sudo cat $device/queue/read_ahead_kb)" >>$fn
+        echo "$(echo "max_sectors_kb:    ")" "$(sudo cat $device/queue/max_sectors_kb)" >>$fn
     done
     echo "$(echo "transparent_hugepage:    ")" "$(cat /sys/kernel/mm/transparent_hugepage/enabled)" >>$fn
     echo "$(echo "panic_on_oom:    ")" "$(cat /proc/sys/vm/panic_on_oom )">>$fn
