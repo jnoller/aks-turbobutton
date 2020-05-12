@@ -101,7 +101,7 @@ main () {
             for (( c=1; c<=MAXRUNS; c++ )); do
                 result="${resultsdir}/${f}.time.out"
                 echo "${script} iteration $c ============ "
-                /usr/bin/time -o "${result}.time.out" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
+                /usr/bin/time -o "${result}" --append -f "%E real,%U user,%S sys" "${script}" "${result}"
                 cat "${result}"
                 rm -rf "${scr}" && mkdir -p "${scr}"
             done
