@@ -72,20 +72,30 @@ main () {
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*"
         echo "checking ${testsdir}"
-        globby="${testsdir}/*.sh"
-        for f in $globby; do
+        globber="${testsdir}/*.sh"
+        for f in $globber; do
             echo "setting up for ${f}"
             scr="${directory}/scratch-temp"
-            mkdir -p "${scr}" && echo "made ${scr}"
+            # Setup scratch directory for tests
+            mkdir -p "${scr}" && echo "made ${scr}" || exit $?
+
             # Execute the command without timing to warm the cache
             echo "warming the cache with initial ${f} execution"
-            "${testsdir}/$(basename ${f}) ${scr}" >"${scr}/cmd.out.log"
+            script=$(realpath "${f}")
+            scriptpath=$(dirname "${script}")
+            if [ "${DEBUG:=0}" -eq 1 ]; then
+                echo "${f}"
+                echo "${scr}"
+                echo "${script}"
+                echo "${scriptpath}"
+            fi
+            bash script > ${scr}/cmd.out.log
             rm -rf "${scr}" && mkdir -p "${scr}"
 
             # Run a loop of 5 iterations
             for i in {0..5}; do
-                echo "${f} iteration $i ============ "
-                /usr/bin/time -o "${filename}.time.out" --append -f "%E real,%U user,%S sys" "${f}" "${scr}"
+                echo "${script} iteration $i ============ "
+                /usr/bin/time -o "${f}.time.out" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
                 rm -rf "${scr}" && mkdir -p "${scr}"
             done
 
