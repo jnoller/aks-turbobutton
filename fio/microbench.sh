@@ -9,7 +9,7 @@
 
 
 
-resultsdir="$PWD/fio-results"
+resultsdir="$PWD/microbench-results"
 testsdir="$PWD/micro_tests"
 drive_dirs=("/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
@@ -93,9 +93,12 @@ main () {
             rm -rf "${scr}" && mkdir -p "${scr}"
 
             # Run a loop of 5 iterations
-            for i in {0..5}; do
-                echo "${script} iteration $i ============ "
-                /usr/bin/time -o "${f}.time.out" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
+            max="{$MAXRUNS:=5}"
+            for (( c=1; c<=$max; c++ )); do
+                result="${resultsdir}/${f}.time.out"
+                echo "${script} iteration $c ============ "
+                /usr/bin/time -o "${result}.time.out" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
+                cat "${result}"
                 rm -rf "${scr}" && mkdir -p "${scr}"
             done
 
