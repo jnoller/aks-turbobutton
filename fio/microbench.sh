@@ -43,16 +43,16 @@ interrogate () {
 }
 
 spawn_watchers () {
-    iottop_cmd="iotop --only -b >${resultsdir}/iotop.log"
-    iostat_cmd="iostat --only -b >${resultsdir}/iostat.log"
-    ext4slower_cmd="ext4slower 1 -j >${resultsdir}/ext4slower.log"
-    biosnoop_cmd="biosnoop -Q >${resultsdir}/biosnoop.log"
-    gethostlatency_cmd="gethostlatency >${resultsdir}/hostlatency.log"
-    schedulerlat_cmd="runqlat -m 5 >${resultsdir}/scheduler-latency.log"
+    target=$1
+    mkdir -p ${target}
+    iottop_cmd="iotop --only -b >${target}/iotop.log"
+    iostat_cmd="iostat --only -b >${target}/iostat.log"
+    ext4slower_cmd="ext4slower 1 -j >${target}/ext4slower.log"
+    biosnoop_cmd="biosnoop -Q >${target}/biosnoop.log"
+    gethostlatency_cmd="gethostlatency >${target}/hostlatency.log"
+    schedulerlat_cmd="runqlat -m 5 >${target}/scheduler-latency.log"
     if [ "${BCCON}" -eq 1 ]; then
-    # command_list=(iottop_cmd iostat_cmd ext4slower_cmd biosnoop_cmd gethostlatency schedulerlat_cmd)
-    # command_list=(ext4slower_cmd biosnoop_cmd)
-        command_list=(ext4slower_cmd biosnoop_cmd gethostlatency schedulerlat_cmd)
+        command_list=(iottop_cmd iostat_cmd ext4slower_cmd biosnoop_cmd gethostlatency schedulerlat_cmd)
     else
         command_list=(iottop_cmd iostat_cmd)
     fi
@@ -81,7 +81,9 @@ main () {
     interrogate
 
     for directory in "${drive_dirs[@]}"; do
-        echo "moving to ${directory} ============ \n"
+        dname=$(basename "${directory}")
+        mkdir -p "${resultsdir}/${dname}"
+        echo "moving to ${directory}"
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*"
         globber="${testsdir}/*.sh"
@@ -101,16 +103,18 @@ main () {
                 echo "  script: ${script}"
                 echo "  scriptpath: ${scriptpath}"
             fi
-            ${script} ${scr} > ${scr}/cmd.out.log
+            ${script} ${scr} >${scr}/cmd.out.log
             rm -rf "${scr}" && mkdir -p "${scr}"
+
+            spawn_watchers "${resultsdir}/${directory}/${base}-diag"
 
             # Run a loop of $MAXRUNS iterations
             for (( c=1; c<=MAXRUNS; c++ )); do
                 base=$(basename "${script}")
-                result="${resultsdir}/${base}.time.out"
-                echo "============ ${script} iteration $c ============ "
+                result="${resultsdir}/${directory}.${base}.results"
+                echo "[TEST] disk: ${directory} test: ${script} run: $c"
                 /usr/bin/time -o "${result}" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
-                cat "${result}"
+                echo "[RESULT] result ${c}: $(tail -n 1 ${result})"
                 rm -rf "${scr}" && mkdir -p "${scr}"
             done
 
