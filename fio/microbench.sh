@@ -12,8 +12,9 @@
 DEBUG=${DEBUG:=0}
 MAXRUNS=${MAXRUNS:=5}
 BCCON=${BCCON:0}
-
-resultsdir="$PWD/microbench-results"
+timestamp=$(date +%T)
+resultsdir_base="$PWD/test_results"
+resultsdir_base="${resultsdir_base}-${timestamp}"
 testsdir="$PWD/micro_tests"
 drive_dirs=("/os-disk" "/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
@@ -26,6 +27,7 @@ interrogate () {
     echo "===========================================================" >> $fn
     for device in /sys/block/sd*;
     do
+        echo "Device:     ${device}"
 
         echo "$(echo "scheduler:    ")" "$(sudo cat $device/queue/scheduler)" >>$fn
         echo "$(echo "read_ahead_kb:    ")" "$(sudo cat $device/queue/read_ahead_kb)" >>$fn
@@ -35,8 +37,8 @@ interrogate () {
     echo "$(echo "panic_on_oom:    ")" "$(cat /proc/sys/vm/panic_on_oom )">>$fn
     echo "$(echo "swappiness:    ")" "$(cat /proc/sys/vm/swappiness)" >>$fn
     echo "$(echo "kernel panic:    ")" "$(cat /proc/sys/kernel/panic)" >>$fn
-    echo -n "\n\n" >> $fn
-    echo -n "$(df -h)" >>$fn
+    echo "\n\n" >> $fn
+    echo "$(df -h)" >>$fn
 }
 
 spawn_watchers () {
@@ -72,15 +74,15 @@ function onexit() {
 main () {
     trap onexit 0 # Havest/sigquit all subshells - forks() array
     echo "checking ${resultsdir}"
+
     mkdir -p "${resultsdir}"
 
     interrogate
 
     for directory in "${drive_dirs[@]}"; do
-        echo "moving to ${directory}"
+        echo "moving to ${directory} ============ \n"
         cd "${directory}" || exit 1
         rm -rf "${directory:?}/*"
-        echo "checking ${testsdir}"
         globber="${testsdir}/*.sh"
         for f in $globber; do
             echo "setting up for ${f}"
@@ -93,10 +95,10 @@ main () {
             script=$(realpath "${f}")
             scriptpath=$(dirname "${script}")
             if [ "${DEBUG}" -eq 1 ]; then
-                echo "${f}"
-                echo "${scr}"
-                echo "${script}"
-                echo "${scriptpath}"
+                echo "  file: ${f}"
+                echo "  scratch: ${scr}"
+                echo "  script: ${script}"
+                echo "  scriptpath: ${scriptpath}"
             fi
             ${script} ${scr} > ${scr}/cmd.out.log
             rm -rf "${scr}" && mkdir -p "${scr}"
@@ -105,7 +107,7 @@ main () {
             for (( c=1; c<=MAXRUNS; c++ )); do
                 base=$(basename "${script}")
                 result="${resultsdir}/${base}.time.out"
-                echo "${script} iteration $c ============ "
+                echo "============ ${script} iteration $c ============ "
                 /usr/bin/time -o "${result}" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
                 cat "${result}"
                 rm -rf "${scr}" && mkdir -p "${scr}"
