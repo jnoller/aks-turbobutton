@@ -14,7 +14,7 @@ MAXRUNS=${MAXRUNS:=5}
 BCCON=${BCCON:0}
 timestamp=$(date +%T)
 resultsdir_base="$PWD/test_results"
-resultsdir_base="${resultsdir_base}-${timestamp}"
+resultsdir="${resultsdir_base}-${timestamp}"
 testsdir="$PWD/micro_tests"
 drive_dirs=("/os-disk" "/32gb" "/128gb" "/1024gb" "/2048gb")
 forks=()
