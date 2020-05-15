@@ -1,0 +1,96 @@
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       7.94 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       3.97 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 48747 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.10 % [kworker/u256:2]
+ 51247 be/4 root        0.00 B/s    3.97 K/s  0.00 %  0.00 % python /usr/sbin/iotop --only -b
+  2025 be/4 root        0.00 B/s    3.97 K/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 49066 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.09 % [kworker/u256:3]
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       3.97 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       3.97 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+  2025 be/4 root        0.00 B/s    3.97 K/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 48747 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.08 % [kworker/u256:2]
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       3.96 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       3.96 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 49066 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.08 % [kworker/u256:3]
+  2025 be/4 root        0.00 B/s    3.96 K/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 48747 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.09 % [kworker/u256:2]
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       3.96 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       3.96 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+  2025 be/4 root        0.00 B/s    3.96 K/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 49066 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.09 % [kworker/u256:3]
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+Total DISK READ :       0.00 B/s | Total DISK WRITE :      23.80 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       3.97 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 48747 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.08 % [kworker/u256:2]
+  2025 be/4 root        0.00 B/s    3.97 K/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+  2032 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       3.96 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 51247 be/4 root        0.00 B/s    3.96 K/s  0.00 %  0.00 % python /usr/sbin/iotop --only -b
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 49066 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.08 % [kworker/u256:3]
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       3.95 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       3.95 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+  2025 be/4 root        0.00 B/s    3.95 K/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 49066 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.10 % [kworker/u256:3]
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       3.96 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       3.96 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 48747 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.85 % [kworker/u256:2]
+  2025 be/4 root        0.00 B/s    3.96 K/s  0.00 %  0.00 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 48747 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.09 % [kworker/u256:2]
+Total DISK READ :       0.00 B/s | Total DISK WRITE :      47.58 K/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:      71.37 K/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+   367 be/3 root        0.00 B/s   43.62 K/s  0.00 %  1.14 % [jbd2/sda1-8]
+  2025 be/4 root        0.00 B/s    3.97 K/s  0.00 %  0.02 % python3 -u bin/WALinuxAgent-2.2.46-py2.7.egg -run-exthandlers
+Total DISK READ :       0.00 B/s | Total DISK WRITE :       0.00 B/s
+Actual DISK READ:       0.00 B/s | Actual DISK WRITE:       0.00 B/s
+   TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN      IO    COMMAND
+ 48747 be/4 root        0.00 B/s    0.00 B/s  0.00 %  0.07 % [kworker/u256:2]

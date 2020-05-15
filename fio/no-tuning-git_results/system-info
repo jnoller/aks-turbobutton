@@ -1,0 +1,41 @@
+Linux iob2 4.15.0-1082-azure #92~16.04.1-Ubuntu SMP Tue Apr 14 22:28:34 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+cpu:      Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz
+cores:     2
+===========================================================
+scheduler:     [none] 
+read_ahead_kb:     128
+max_sectors_kb:     512
+scheduler:     [none] 
+read_ahead_kb:     128
+max_sectors_kb:     512
+scheduler:     [none] 
+read_ahead_kb:     128
+max_sectors_kb:     512
+scheduler:     [none] 
+read_ahead_kb:     128
+max_sectors_kb:     512
+scheduler:     [none] 
+read_ahead_kb:     128
+max_sectors_kb:     512
+scheduler:     [none] 
+read_ahead_kb:     128
+max_sectors_kb:     512
+transparent_hugepage:     [always] madvise never
+panic_on_oom:     0
+swappiness:     60
+kernel panic:     0
+\n\n
+Filesystem      Size  Used Avail Use% Mounted on
+udev            3.9G     0  3.9G   0% /dev
+tmpfs           796M   49M  747M   7% /run
+/dev/sda1        29G  3.2G   26G  12% /
+tmpfs           3.9G     0  3.9G   0% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs           3.9G     0  3.9G   0% /sys/fs/cgroup
+/dev/sda15      105M  3.6M  101M   4% /boot/efi
+/dev/sdb1        16G   44M   15G   1% /mnt
+tmpfs           796M     0  796M   0% /run/user/1000
+/dev/sdf1        32G   48M   30G   1% /32gb
+/dev/sde1       126G   60M  120G   1% /128gb
+/dev/sdd1      1008G   72M  957G   1% /1024gb
+/dev/sdc1       2.0T   71M  1.9T   1% /2048gb
