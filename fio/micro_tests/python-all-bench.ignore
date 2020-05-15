@@ -1,1 +1,11 @@
 #!/usr/bin/env bash
+
+targ=$1
+cd "${targ}" || exit 1
+
+# add check for dependencies
+
+package="https://www.python.org/ftp/python/3.8.3/Python-3.8.3.tgz"
+
+wget -c ${package} -O - | tar -xz
+cd Python-3.8*/ || exit 1
