@@ -11,13 +11,16 @@
 
 DEBUG=${DEBUG:=0}
 MAXRUNS=${MAXRUNS:=5}
-BCCON=${BCCON:0}
+BCCENABLED=${BCCON:=0}
+WARMCACHE=${WARMCACHE:=1}
+
 timestamp=$(date +%T)
 resultsdir_base="$PWD/test_results"
 resultsdir="${resultsdir_base}-${timestamp}"
+diagdir="${resultsdir}/diagnostics"
 testsdir="$PWD/micro_tests"
 drive_dirs=("/os-disk" "/32gb" "/128gb" "/1024gb" "/2048gb")
-forks=()
+PROCESS_FORKS=()
 
 interrogate () {
     fn="${resultsdir}/system-info"
@@ -42,30 +45,46 @@ interrogate () {
     chmod a+rw ${fn}
 }
 
+
 spawn_watchers () {
     target=$1
-    mkdir -p ${target}
-    iottop_cmd="iotop --only -b >${target}/iotop.log"
-    iostat_cmd="iostat --only -b >${target}/iostat.log"
-    ext4slower_cmd="ext4slower 1 -j >${target}/ext4slower.log"
-    biosnoop_cmd="biosnoop -Q >${target}/biosnoop.log"
-    gethostlatency_cmd="gethostlatency >${target}/hostlatency.log"
-    schedulerlat_cmd="runqlat -m 5 >${target}/scheduler-latency.log"
-    if [ "${BCCON}" -eq 1 ]; then
-        command_list=(iottop_cmd iostat_cmd ext4slower_cmd biosnoop_cmd gethostlatency schedulerlat_cmd)
-    else
-        command_list=(iottop_cmd iostat_cmd)
+    echo "diagnostics dir: ${target}"
+
+
+    bcc_cmds=("ext4slower 1 -j"
+            "biosnoop -Q"
+            "gethostlatency"
+            "runqlat -m 5")
+    base_cmds=("iotop -b --only")
+    # add top cpu mem
+
+    if [ "${BCCENABLED}" -eq 1 ]; then
+        for comm in ${bcc_cmds[*]}; do
+            precmd="sudo nohup bash"
+            bccpath="/usr/share/bcc/tools"
+            logn=$(echo "${comm}" | awk '{print $3}')
+            echo $logn
+            postcmd=">> ${target}/${logn}.log"
+            # Execute tracked subshell
+            echo "${precmd} ${bccpath}/${comm} ${postcmd}"
+            new_pid=$!
+            PROCESS_FORKS+=("${new_pid}")
+        done
     fi
-    for comm in "${command_list[@]}"; do
-        ${comm} &
+    for comm in ${base_cmds[*]}; do
+        precmd="sudo bash"
+        logn=$(echo "${comm}" | awk '{print $3}')
+        postcmd=">> ${target}/${logn}.log"
+        echo "${precmd} ${comm} ${postcmd}"
         new_pid=$!
-        forks+=("${new_pid}")
+        echo $new_pid
+        PROCESS_FORKS+=("${new_pid}")
     done
 
 }
 
 function onexit() {
-    for x in "${forks[@]}"; do
+    for x in "${PROCESS_FORKS[@]}"; do
         kill "${x}"
     done
 }
@@ -73,7 +92,9 @@ function onexit() {
 
 
 main () {
-    trap onexit 0 # Havest/sigquit all subshells - forks() array
+
+    trap onexit INT TERM ERR
+    trap onexit EXIT
     echo "checking ${resultsdir}"
 
     mkdir -p "${resultsdir}"
@@ -92,9 +113,6 @@ main () {
             scr="${directory}/scratch-temp"
             # Setup scratch directory for tests
             rm -rf "${scr}" && mkdir -p "${scr}"
-            echo "made ${scr}"
-            # Execute the command without timing to warm the cache
-            echo "warming the cache with initial ${f} execution"
             script=$(realpath "${f}")
             scriptpath=$(dirname "${script}")
             if [ "${DEBUG}" -eq 1 ]; then
@@ -103,16 +121,22 @@ main () {
                 echo "  script: ${script}"
                 echo "  scriptpath: ${scriptpath}"
             fi
-            ${script} ${scr} >${scr}/cmd.out.log
-            rm -rf "${scr}" && mkdir -p "${scr}"
-
-            spawn_watchers "${resultsdir}/${directory}/${base}-diag"
-
+            if [ "${WARMCACHE}" -eq 1 ]; then
+                # Execute the command without timing to warm the cache
+                echo "warming the cache with initial ${f} execution"
+                ${script} ${scr} >${scr}/cmd.out.log
+                rm -rf "${scr}" && mkdir -p "${scr}"
+            fi
+            base=$(basename "${script}")
+            diagdir="${resultsdir}/${directory}/diagnostics"
+            mkdir -p "${diagdir}"
+            # spawn_watchers "${diagdir}"
+            # exit
             # Run a loop of $MAXRUNS iterations
             for (( c=1; c<=MAXRUNS; c++ )); do
-                base=$(basename "${script}")
-                result="${resultsdir}/${directory}.${base}.results"
-                echo "[TEST] disk: ${directory} test: ${script} run: $c"
+
+                result="${resultsdir}${directory}.${base}.results"
+                echo "[TEST] disk: ${directory} test: ${script} run: $c stamp: $(date)"
                 /usr/bin/time -o "${result}" --append -f "%E real,%U user,%S sys" "${script}" "${scr}"
                 echo "[RESULT] result ${c}: $(tail -n 1 ${result})"
                 rm -rf "${scr}" && mkdir -p "${scr}"
