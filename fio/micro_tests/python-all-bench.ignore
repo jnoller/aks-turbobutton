@@ -9,3 +9,6 @@ package="https://www.python.org/ftp/python/3.8.3/Python-3.8.3.tgz"
 
 wget -c ${package} -O - | tar -xz
 cd Python-3.8*/ || exit 1
+./configure --enable-optimizations
+make
+python3 -m pyperformance list_groups
