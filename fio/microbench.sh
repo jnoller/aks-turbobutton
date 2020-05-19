@@ -19,7 +19,7 @@ resultsdir_base="$PWD/test_results"
 resultsdir="${resultsdir_base}-${timestamp}"
 diagdir="${resultsdir}/diagnostics"
 testsdir="$PWD/micro_tests"
-drive_dirs=("/os-disk" "/32gb" "/128gb" "/1024gb" "/2048gb")
+drive_dirs=("/os-disk" "/ephemeral" "/32gb" "/128gb" "/1024gb" "/2048gb")
 PROCESS_FORKS=()
 
 interrogate () {

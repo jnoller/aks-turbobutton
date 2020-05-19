@@ -12,3 +12,8 @@ cd Python-3.8*/ || exit 1
 ./configure --enable-optimizations
 make
 python3 -m pyperformance list_groups
+
+
+
+  606  ./configure --prefix $PWD/compiled-py
+  607  make && make install
